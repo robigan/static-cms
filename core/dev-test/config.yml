@@ -221,6 +221,13 @@ collections:
         file: _widgets/list.yml
         description: List widget
         fields:
+          - name: array_list
+            label: Array
+            widget: list
+            field:
+              label: Test
+              name: test
+              widget: string
           - name: list
             label: List
             widget: list

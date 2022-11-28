@@ -2,9 +2,10 @@ import { styled } from '@mui/material/styles';
 import { arrayMoveImmutable } from 'array-move';
 import isEmpty from 'lodash/isEmpty';
 import React, { useCallback, useMemo, useState } from 'react';
-import { SortableContainer } from 'react-sortable-hoc';
+import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import uuid from 'uuid';
 
+import EditorControl from '../../components/Editor/EditorControlPane/EditorControl';
 import FieldLabel from '../../components/UI/FieldLabel';
 import ObjectWidgetTopBar from '../../components/UI/ObjectWidgetTopBar';
 import Outline from '../../components/UI/Outline';
@@ -17,9 +18,11 @@ import type {
   Field,
   ListField,
   ObjectValue,
+  UnknownField,
   ValueOrNestedValue,
   WidgetControlProps,
 } from '../../interface';
+
 
 const StyledListWrapper = styled('div')`
   position: relative;
@@ -63,9 +66,12 @@ const SortableList = SortableContainer<SortableListProps>(
   },
 );
 
+// const SortableEditorControl = SortableElement<{ children: JSX.Element }>(EditorControl);
+
 export enum ListValueType {
   MULTIPLE,
   MIXED,
+  SINGLE
 }
 
 function getFieldsDefault(fields: Field[], initialValue: ObjectValue = {}): ObjectValue {
@@ -119,6 +125,8 @@ const ListControl = ({
       return ListValueType.MULTIPLE;
     } else if ('types' in field) {
       return ListValueType.MIXED;
+    } else if ('field' in field) {
+      return ListValueType.SINGLE;
     } else {
       return null;
     }
@@ -214,6 +222,27 @@ const ListControl = ({
       const key = keys[index];
       if (valueType === null) {
         return <div key={key} />;
+      } else if (valueType === ListValueType.SINGLE) {
+        const isDuplicate = isFieldDuplicate && isFieldDuplicate(field);
+        const isHidden = isFieldHidden && isFieldHidden(field);
+
+        return (
+          <EditorControl
+            key={index}
+            field={field.field as Field<UnknownField>}
+            value={item}
+            fieldsErrors={fieldsErrors}
+            submitted={submitted}
+            parentPath={path}
+            isDisabled={isDuplicate}
+            isHidden={isHidden}
+            isFieldDuplicate={isFieldDuplicate}
+            isFieldHidden={isFieldHidden}
+            locale={locale}
+            i18n={i18n}
+            forList
+          />
+        );
       }
 
       return (

@@ -568,6 +568,7 @@ export interface ListField<EF extends BaseField = UnknownField> extends BaseFiel
   summary?: string;
   label_singular?: string;
   fields?: Field<EF>[];
+  field?: Field<EF>;
   max?: number;
   min?: number;
   add_to_top?: boolean;
