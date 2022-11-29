@@ -121,12 +121,12 @@ const ListControl = ({
   const [keys, setKeys] = useState(Array.from({ length: internalValue.length }, () => uuid()));
 
   const valueType = useMemo(() => {
-    if ('fields' in field) {
+    if ('field' in field) {
+      return ListValueType.SINGLE;
+    } else if ('fields' in field) {
       return ListValueType.MULTIPLE;
     } else if ('types' in field) {
       return ListValueType.MIXED;
-    } else if ('field' in field) {
-      return ListValueType.SINGLE;
     } else {
       return null;
     }
@@ -230,7 +230,7 @@ const ListControl = ({
           <EditorControl
             key={index}
             field={field.field as Field<UnknownField>}
-            value={item}
+            value={item[field.field?.name as string]}
             fieldsErrors={fieldsErrors}
             submitted={submitted}
             parentPath={path}
