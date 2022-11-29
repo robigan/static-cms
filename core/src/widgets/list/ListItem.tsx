@@ -166,6 +166,9 @@ const ListItem = ({
           : labelFieldValue;
         return [(labelReturn || `No ${labelField.name}`).toString(), childObjectField];
       }
+      case ListValueType.SINGLE: {
+        return [base, childObjectField];
+      }
     }
   }, [entry, field, index, value, valueType]);
 
