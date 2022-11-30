@@ -17,10 +17,18 @@ import type {
   Entry,
   EntryData,
   ListField,
+  NumberField,
   ObjectField,
   ObjectValue,
+  StringOrTextField,
   WidgetControlProps,
 } from '../../interface';
+
+export class ListValueTypeError extends Error {
+  constructor(type: ListValueType) {
+      super(`A ListValueType was used in a place where ListValueType isn't supported, tried using ${type}`);
+  }
+}
 
 const StyledListItem = styled('div')`
   position: relative;
@@ -110,7 +118,7 @@ const ListItem = ({
   value,
   i18n,
 }: ListItemProps) => {
-  const [objectLabel, objectField] = useMemo((): [string, ListField | ObjectField] => {
+  const [computedLabel, computedField, computedValue] = useMemo((): [string, ListField | ObjectField | StringOrTextField | NumberField, typeof value | string | number] => {
     const childObjectField: ObjectField = {
       name: `${index}`,
       label: field.label,
@@ -121,7 +129,7 @@ const ListItem = ({
 
     const base = field.label ?? field.name;
     if (valueType === null) {
-      return [base, childObjectField];
+      return [base, childObjectField, value];
     }
 
     const objectValue = value ?? {};
@@ -129,12 +137,12 @@ const ListItem = ({
     switch (valueType) {
       case ListValueType.MIXED: {
         if (!validateItem(field, objectValue)) {
-          return [base, childObjectField];
+          return [base, childObjectField, value];
         }
 
         const itemType = getTypedFieldForValue(field, objectValue, index);
         if (!itemType) {
-          return [base, childObjectField];
+          return [base, childObjectField, value];
         }
 
         const label = itemType.label ?? itemType.name;
@@ -143,19 +151,19 @@ const ListItem = ({
         const labelReturn = summary
           ? `${label} - ${handleSummary(summary, entry, label, objectValue)}`
           : label;
-        return [labelReturn, itemType];
+        return [labelReturn, itemType, value];
       }
       case ListValueType.MULTIPLE: {
         childObjectField.fields = field.fields ?? [];
 
         if (!validateItem(field, objectValue)) {
-          return [base, childObjectField];
+          return [base, childObjectField, value];
         }
 
         const multiFields = field.fields;
         const labelField = multiFields && multiFields[0];
         if (!labelField) {
-          return [base, childObjectField];
+          return [base, childObjectField, value];
         }
 
         const labelFieldValue = objectValue[labelField.name];
@@ -164,10 +172,33 @@ const ListItem = ({
         const labelReturn = summary
           ? handleSummary(summary, entry, String(labelFieldValue), objectValue)
           : labelFieldValue;
-        return [(labelReturn || `No ${labelField.name}`).toString(), childObjectField];
+        return [(labelReturn || `No ${labelField.name}`).toString(), childObjectField, value];
       }
       case ListValueType.SINGLE: {
-        return [base, childObjectField];
+        const widgetField = field.field;
+
+        if (typeof(widgetField) === "undefined") throw new ListValueTypeError(ListValueType.SINGLE);
+        if (widgetField.widget !== "number" && widgetField.widget !== "string") {
+          console.warn("Treating a list widget's `field` property as a `fields` property. Unintended side affects may present themselves");
+          return [base, childObjectField, value];
+        }
+        if (!validateItem(field, objectValue)) {
+          return [base, childObjectField, value];
+        }
+
+        let originalFieldValue = objectValue[widgetField.name];
+
+        if (typeof originalFieldValue !== "number" && typeof originalFieldValue !== "string") {
+          if (widgetField.widget === "number") originalFieldValue = 0;
+          else if (widgetField.widget === "string") originalFieldValue = "";
+        }
+
+        const fieldValue = originalFieldValue as string | number;
+
+        const label = widgetField.label ?? widgetField.name;
+        const labelReturn = fieldValue ? fieldValue.toString() : label;
+        
+        return [labelReturn, widgetField, fieldValue];
       }
     }
   }, [entry, field, index, value, valueType]);
@@ -194,14 +225,14 @@ const ListItem = ({
           onRemove={partial(handleRemove, index)}
           dragHandleHOC={SortableHandle}
           data-testid={`styled-list-item-top-bar-${index}`}
-          title={objectLabel}
+          title={computedLabel}
           isVariableTypesList={valueType === ListValueType.MIXED}
         />
         <StyledObjectFieldWrapper $collapsed={collapsed}>
           <EditorControl
             key={index}
-            field={objectField}
-            value={value}
+            field={computedField}
+            value={computedValue}
             fieldsErrors={fieldsErrors}
             submitted={submitted}
             parentPath={path}
