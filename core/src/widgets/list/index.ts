@@ -4,7 +4,7 @@ import schema from './schema';
 
 import type { ListField, WidgetParam, ObjectValue } from '../../interface';
 
-const ListWidget = (): WidgetParam<ObjectValue[], ListField> => {
+const ListWidget = (): WidgetParam<(ObjectValue | string | number)[], ListField> => {
   return {
     name: 'list',
     controlComponent,

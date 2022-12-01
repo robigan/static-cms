@@ -53,9 +53,9 @@ const StyledSortableList = styled(
 );
 
 interface SortableListProps {
-  items: ObjectValue[];
+  items: (ObjectValue | string | number)[];
   collapsed: boolean;
-  renderItem: (item: ObjectValue, index: number) => JSX.Element;
+  renderItem: (item: ObjectValue | string | number, index: number) => JSX.Element;
 }
 
 const SortableList = SortableContainer<SortableListProps>(
@@ -113,7 +113,7 @@ const ListControl = ({
   value,
   i18n,
   hasErrors,
-}: WidgetControlProps<ObjectValue[], ListField>) => {
+}: WidgetControlProps<(ObjectValue | string | number)[], ListField>) => {
   const internalValue = useMemo(() => value ?? [], [value]);
   const [collapsed, setCollapsed] = useState(field.collapsed ?? true);
   const [keys, setKeys] = useState(Array.from({ length: internalValue.length }, () => uuid()));
@@ -216,7 +216,7 @@ const ListControl = ({
   );
 
   const renderItem = useCallback(
-    (item: ObjectValue, index: number) => {
+    (item: ObjectValue | string | number, index: number) => {
       const key = keys[index];
       if (valueType === null) {
         return <div key={key} />;

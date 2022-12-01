@@ -96,6 +96,7 @@ export async function validate(
   for (const validation of validations) {
     const response = await validation({ field: field as UnknownField, value: validValue, t });
     if (response) {
+      console.debug("Validation failed for ", validation.name, " with response ", response);
       errors.push(response);
     }
   }

@@ -86,7 +86,7 @@ function validateItem(field: ListField, item: ObjectValue) {
 
 interface ListItemProps
   extends Pick<
-    WidgetControlProps<ObjectValue, ListField>,
+    WidgetControlProps<ObjectValue | string | number, ListField>,
     | 'entry'
     | 'field'
     | 'fieldsErrors'
@@ -118,7 +118,7 @@ const ListItem = ({
   value,
   i18n,
 }: ListItemProps) => {
-  const [computedLabel, computedField, computedValue] = useMemo((): [string, ListField | ObjectField | StringOrTextField | NumberField, typeof value | string | number] => {
+  const [computedLabel, computedField] = useMemo((): [string, ListField | ObjectField | StringOrTextField | NumberField] => {
     const childObjectField: ObjectField = {
       name: `${index}`,
       label: field.label,
@@ -129,7 +129,7 @@ const ListItem = ({
 
     const base = field.label ?? field.name;
     if (valueType === null) {
-      return [base, childObjectField, value];
+      return [base, childObjectField];
     }
 
     const objectValue = value ?? {};
@@ -137,12 +137,12 @@ const ListItem = ({
     switch (valueType) {
       case ListValueType.MIXED: {
         if (!validateItem(field, objectValue)) {
-          return [base, childObjectField, value];
+          return [base, childObjectField];
         }
 
         const itemType = getTypedFieldForValue(field, objectValue, index);
         if (!itemType) {
-          return [base, childObjectField, value];
+          return [base, childObjectField];
         }
 
         const label = itemType.label ?? itemType.name;
@@ -151,19 +151,19 @@ const ListItem = ({
         const labelReturn = summary
           ? `${label} - ${handleSummary(summary, entry, label, objectValue)}`
           : label;
-        return [labelReturn, itemType, value];
+        return [labelReturn, itemType];
       }
       case ListValueType.MULTIPLE: {
         childObjectField.fields = field.fields ?? [];
 
         if (!validateItem(field, objectValue)) {
-          return [base, childObjectField, value];
+          return [base, childObjectField];
         }
 
         const multiFields = field.fields;
         const labelField = multiFields && multiFields[0];
         if (!labelField) {
-          return [base, childObjectField, value];
+          return [base, childObjectField];
         }
 
         const labelFieldValue = objectValue[labelField.name];
@@ -172,7 +172,7 @@ const ListItem = ({
         const labelReturn = summary
           ? handleSummary(summary, entry, String(labelFieldValue), objectValue)
           : labelFieldValue;
-        return [(labelReturn || `No ${labelField.name}`).toString(), childObjectField, value];
+        return [(labelReturn || `No ${labelField.name}`).toString(), childObjectField];
       }
       case ListValueType.SINGLE: {
         const widgetField = field.field;
@@ -180,25 +180,25 @@ const ListItem = ({
         if (typeof(widgetField) === "undefined") throw new ListValueTypeError(ListValueType.SINGLE);
         if (widgetField.widget !== "number" && widgetField.widget !== "string") {
           console.warn("Treating a list widget's `field` property as a `fields` property. Unintended side affects may present themselves");
-          return [base, childObjectField, value];
+          return [base, childObjectField];
         }
         if (!validateItem(field, objectValue)) {
-          return [base, childObjectField, value];
+          return [base, childObjectField];
         }
 
-        let originalFieldValue = objectValue[widgetField.name];
-
-        if (typeof originalFieldValue !== "number" && typeof originalFieldValue !== "string") {
-          if (widgetField.widget === "number") originalFieldValue = 0;
-          else if (widgetField.widget === "string") originalFieldValue = "";
+        if (typeof objectValue[widgetField.name] !== "number" && typeof objectValue[widgetField.name] !== "string") {
+          console.log("Reassigning");
+          if (widgetField.widget === "number") objectValue[widgetField.name] = undefined;
+          else if (widgetField.widget === "string") objectValue[widgetField.name] = undefined;
         }
 
-        const fieldValue = originalFieldValue as string | number;
+        const labelFieldValue = objectValue[widgetField.name];
 
+        console.log(labelFieldValue, objectValue);
         const label = widgetField.label ?? widgetField.name;
-        const labelReturn = fieldValue ? fieldValue.toString() : label;
+        const labelReturn = labelFieldValue ? labelFieldValue.toString() : label;
         
-        return [labelReturn, widgetField, fieldValue];
+        return [labelReturn, widgetField];
       }
     }
   }, [entry, field, index, value, valueType]);
@@ -232,7 +232,7 @@ const ListItem = ({
           <EditorControl
             key={index}
             field={computedField}
-            value={computedValue}
+            value={value}
             fieldsErrors={fieldsErrors}
             submitted={submitted}
             parentPath={path}

@@ -4,7 +4,7 @@ import WidgetPreviewContainer from '../../components/UI/WidgetPreviewContainer';
 
 import type { ListField, ObjectValue, WidgetPreviewProps } from '../../interface';
 
-function ObjectPreview({ field }: WidgetPreviewProps<ObjectValue[], ListField>) {
+function ObjectPreview({ field }: WidgetPreviewProps<(ObjectValue | string | number)[], ListField>) {
   return <WidgetPreviewContainer>{field.fields ?? null}</WidgetPreviewContainer>;
 }
 
