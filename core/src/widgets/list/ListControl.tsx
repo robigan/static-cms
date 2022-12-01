@@ -2,10 +2,9 @@ import { styled } from '@mui/material/styles';
 import { arrayMoveImmutable } from 'array-move';
 import isEmpty from 'lodash/isEmpty';
 import React, { useCallback, useMemo, useState } from 'react';
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+import { SortableContainer } from 'react-sortable-hoc';
 import uuid from 'uuid';
 
-import EditorControl from '../../components/Editor/EditorControlPane/EditorControl';
 import FieldLabel from '../../components/UI/FieldLabel';
 import ObjectWidgetTopBar from '../../components/UI/ObjectWidgetTopBar';
 import Outline from '../../components/UI/Outline';
@@ -18,7 +17,6 @@ import type {
   Field,
   ListField,
   ObjectValue,
-  UnknownField,
   ValueOrNestedValue,
   WidgetControlProps,
 } from '../../interface';
@@ -222,27 +220,6 @@ const ListControl = ({
       const key = keys[index];
       if (valueType === null) {
         return <div key={key} />;
-      } else if (valueType === ListValueType.SINGLE) {
-        const isDuplicate = isFieldDuplicate && isFieldDuplicate(field);
-        const isHidden = isFieldHidden && isFieldHidden(field);
-
-        return (
-          <EditorControl
-            key={index}
-            field={field.field as Field<UnknownField>}
-            value={item[field.field?.name as string]}
-            fieldsErrors={fieldsErrors}
-            submitted={submitted}
-            parentPath={path}
-            isDisabled={isDuplicate}
-            isHidden={isHidden}
-            isFieldDuplicate={isFieldDuplicate}
-            isFieldHidden={isFieldHidden}
-            locale={locale}
-            i18n={i18n}
-            forList
-          />
-        );
       }
 
       return (
